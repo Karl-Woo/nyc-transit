@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchPathRealtime } from "@/lib/path";
+import { fetchPathArrivals } from "@/lib/path";
 import { PATH_ROUTE_COLORS } from "@/lib/constants";
 import type { ArrivalDisplay } from "@/lib/types";
 
@@ -15,33 +15,25 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const trains = await fetchPathRealtime(station);
+    const trains = await fetchPathArrivals(station);
     const now = Math.floor(Date.now() / 1000);
 
     const arrivals: ArrivalDisplay[] = trains.map((t, i) => {
-      const arrivalTime = Math.floor(
-        new Date(t.projectedArrival).getTime() / 1000
-      );
-      const colors = PATH_ROUTE_COLORS[t.route] || {
-        bg: t.lineColors?.[0] ? `#${t.lineColors[0]}` : "#0039A6",
-        text: "#FFFFFF",
-      };
+      const colors = PATH_ROUTE_COLORS[t.route] || { bg: "#0039A6", text: "#FFFFFF" };
 
       return {
-        id: `path-${t.route}-${arrivalTime}-${i}`,
-        route: t.routeDisplayName || t.route,
+        id: `path-${t.route}-${t.arrivalTime}-${i}`,
+        route: t.routeDisplayName,
         routeColor: colors.bg,
         routeTextColor: colors.text,
-        destination: t.headsign || t.lineName,
-        arrivalTime,
-        minutesAway: Math.max(0, Math.round((arrivalTime - now) / 60)),
-        status: t.status === "ON_TIME" ? "On Time" : t.status,
+        destination: t.headsign,
+        arrivalTime: t.arrivalTime,
+        minutesAway: Math.max(0, Math.round((t.arrivalTime - now) / 60)),
+        status: "On Time",
         direction: t.direction === "TO_NY" ? "To NY" : "To NJ",
         system: "path" as const,
       };
     });
-
-    arrivals.sort((a, b) => a.arrivalTime - b.arrivalTime);
 
     return NextResponse.json(
       { arrivals },
