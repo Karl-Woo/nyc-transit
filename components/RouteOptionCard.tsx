@@ -1,6 +1,8 @@
 "use client";
 
 import { useStyletron } from "baseui";
+import { Block } from "baseui/block";
+import { HeadingXSmall, LabelSmall, ParagraphSmall } from "baseui/typography";
 import RouteTag from "./RouteTag";
 import type { RouteOption } from "@/lib/types";
 
@@ -10,112 +12,95 @@ interface RouteOptionCardProps {
 }
 
 export default function RouteOptionCard({ option, isFastest }: RouteOptionCardProps) {
-  const [css] = useStyletron();
+  const [css, theme] = useStyletron();
 
   return (
-    <div
-      className={css({
-        backgroundColor: "#FFFFFF",
-        borderRadius: "12px",
-        padding: "16px",
-        marginBottom: "8px",
-        borderLeft: isFastest ? "4px solid #000000" : "4px solid #E2E2E2",
-        boxShadow: isFastest ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-      })}
+    <Block
+      backgroundColor={theme.colors.backgroundPrimary}
+      padding="scale600"
+      marginBottom="scale300"
+      overrides={{
+        Block: {
+          style: {
+            borderRadius: theme.borders.radius400,
+            borderLeft: `4px solid ${isFastest ? theme.colors.contentPrimary : theme.colors.borderOpaque}`,
+            boxShadow: isFastest ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+          },
+        },
+      }}
     >
       {/* Header */}
-      <div className={css({ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" })}>
-        <div className={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-          <span className={css({ fontSize: "20px", fontWeight: 700, color: "#000000" })}>
+      <Block display="flex" alignItems="center" justifyContent="space-between" marginBottom="scale500">
+        <Block display="flex" alignItems="center" overrides={{ Block: { style: { gap: theme.sizing.scale300 } } }}>
+          <HeadingXSmall margin={0} color={theme.colors.contentPrimary}>
             ~{option.totalEstimatedMinutes} min
-          </span>
+          </HeadingXSmall>
           {isFastest && (
-            <span
-              className={css({
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#FFFFFF",
-                backgroundColor: "#000000",
-                padding: "2px 8px",
-                borderRadius: "4px",
-                textTransform: "uppercase",
-              })}
+            <LabelSmall
+              color={theme.colors.contentOnColor}
+              overrides={{
+                Block: {
+                  style: {
+                    backgroundColor: theme.colors.contentPrimary,
+                    paddingTop: "2px",
+                    paddingBottom: "2px",
+                    paddingLeft: theme.sizing.scale300,
+                    paddingRight: theme.sizing.scale300,
+                    borderRadius: theme.borders.radius200,
+                    fontWeight: 700,
+                    fontSize: "11px",
+                  },
+                },
+              }}
             >
-              Fastest
-            </span>
+              FASTEST
+            </LabelSmall>
           )}
-        </div>
-        <div className={css({ display: "flex", gap: "4px" })}>
+        </Block>
+        <Block display="flex" overrides={{ Block: { style: { gap: theme.sizing.scale100 } } }}>
           {option.legs.map((leg, i) => (
             <RouteTag key={i} route={leg.route} color={leg.routeColor} textColor={leg.routeTextColor} size="small" />
           ))}
-        </div>
-      </div>
+        </Block>
+      </Block>
 
       {/* Timeline */}
-      <div className={css({ paddingLeft: "12px", borderLeft: "2px solid #E2E2E2" })}>
-        {/* Walk to station */}
+      <Block
+        paddingLeft="scale500"
+        overrides={{
+          Block: {
+            style: {
+              borderLeft: `2px solid ${theme.colors.borderOpaque}`,
+            },
+          },
+        }}
+      >
         {option.walkToOriginMinutes > 0 && (
-          <TimelineStep
-            icon="walk"
-            text={`Walk ${option.walkToOriginMinutes} min`}
-            subtle
-          />
+          <TimelineStep icon="subtle" text={`Walk ${option.walkToOriginMinutes} min`} subtle />
         )}
 
         {option.legs.map((leg, i) => (
           <div key={i}>
-            {/* Board */}
             <TimelineStep
-              icon="board"
-              text={
-                <span>
-                  Board at <strong>{leg.boardStationName}</strong>
-                </span>
-              }
+              icon="primary"
+              text={<>Board at <strong>{leg.boardStationName}</strong></>}
               route={leg.route}
               routeColor={leg.routeColor}
               routeTextColor={leg.routeTextColor}
             />
-
-            {/* Ride */}
-            <TimelineStep
-              icon="ride"
-              text={`${leg.numStops} stops · ${leg.estimatedMinutes} min`}
-              subtle
-            />
-
-            {/* Alight */}
-            <TimelineStep
-              icon="alight"
-              text={
-                <span>
-                  Exit at <strong>{leg.alightStationName}</strong>
-                </span>
-              }
-            />
-
-            {/* Transfer (if not last leg) */}
+            <TimelineStep icon="subtle" text={`${leg.numStops} stops · ${leg.estimatedMinutes} min`} subtle />
+            <TimelineStep icon="primary" text={<>Exit at <strong>{leg.alightStationName}</strong></>} />
             {i < option.legs.length - 1 && (
-              <TimelineStep
-                icon="transfer"
-                text={`Transfer · ~${option.transferPenaltyMinutes} min`}
-                subtle
-              />
+              <TimelineStep icon="subtle" text={`Transfer · ~${option.transferPenaltyMinutes} min`} subtle />
             )}
           </div>
         ))}
 
-        {/* Walk to destination */}
         {option.walkFromDestMinutes > 0 && (
-          <TimelineStep
-            icon="walk"
-            text={`Walk ${option.walkFromDestMinutes} min to destination`}
-            subtle
-          />
+          <TimelineStep icon="subtle" text={`Walk ${option.walkFromDestMinutes} min to destination`} subtle />
         )}
-      </div>
-    </div>
+      </Block>
+    </Block>
   );
 }
 
@@ -134,42 +119,41 @@ function TimelineStep({
   routeColor?: string;
   routeTextColor?: string;
 }) {
-  const [css] = useStyletron();
+  const [css, theme] = useStyletron();
 
   return (
-    <div
-      className={css({
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        padding: "4px 0",
-        marginLeft: "-19px", // Align dots with border
-      })}
+    <Block
+      display="flex"
+      alignItems="center"
+      overrides={{
+        Block: {
+          style: {
+            gap: theme.sizing.scale300,
+            padding: `${theme.sizing.scale100} 0`,
+            marginLeft: "-19px",
+          },
+        },
+      }}
     >
-      {/* Dot */}
-      <div
-        className={css({
-          width: "8px",
-          height: "8px",
-          borderRadius: "50%",
-          backgroundColor: subtle ? "#CCCCCC" : "#000000",
-          flexShrink: 0,
-        })}
+      <Block
+        overrides={{
+          Block: {
+            style: {
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              backgroundColor: subtle ? theme.colors.contentTertiary : theme.colors.contentPrimary,
+              flexShrink: 0,
+            },
+          },
+        }}
       />
-
       {route && routeColor && (
         <RouteTag route={route} color={routeColor} textColor={routeTextColor} size="small" />
       )}
-
-      <span
-        className={css({
-          fontSize: "13px",
-          color: subtle ? "#666666" : "#000000",
-          lineHeight: "1.4",
-        })}
-      >
+      <ParagraphSmall color={subtle ? theme.colors.contentSecondary : theme.colors.contentPrimary} margin={0}>
         {text}
-      </span>
-    </div>
+      </ParagraphSmall>
+    </Block>
   );
 }

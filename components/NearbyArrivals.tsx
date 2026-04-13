@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useStyletron } from "baseui";
 import { Block } from "baseui/block";
+import { LabelMedium, LabelSmall, ParagraphSmall } from "baseui/typography";
 import { Spinner } from "baseui/spinner";
 import { Notification, KIND as NOTIFICATION_KIND } from "baseui/notification";
+// Tag has React type conflicts with baseui's bundled @types/react, using styled Block instead
 import ArrivalCard from "./ArrivalCard";
 import RouteTag from "./RouteTag";
 import type { NearbyStation, ArrivalDisplay } from "@/lib/types";
@@ -22,25 +24,18 @@ interface StationArrivals {
 }
 
 export default function NearbyArrivals({ stations, loading }: NearbyArrivalsProps) {
-  const [css] = useStyletron();
+  const [css, theme] = useStyletron();
   const [stationArrivals, setStationArrivals] = useState<Map<string, StationArrivals>>(new Map());
 
   useEffect(() => {
     if (stations.length === 0) return;
 
     const nearbyToFetch = stations.slice(0, 3);
-
-    // Fetch subway stations via batch endpoint
-    const subwayIds = nearbyToFetch
-      .filter((s) => s.system === "subway")
-      .map((s) => s.stationId);
-
+    const subwayIds = nearbyToFetch.filter((s) => s.system === "subway").map((s) => s.stationId);
     const pathStations = nearbyToFetch.filter((s) => s.system === "path");
 
     async function fetchAll() {
       const newMap = new Map<string, StationArrivals>();
-
-      // Initialize loading state
       for (const s of nearbyToFetch) {
         newMap.set(s.stationId, {
           stationName: "name" in s.station ? s.station.name : "",
@@ -51,18 +46,12 @@ export default function NearbyArrivals({ stations, loading }: NearbyArrivalsProp
       }
       setStationArrivals(new Map(newMap));
 
-      // Fetch subway batch
       if (subwayIds.length > 0) {
         try {
           const res = await fetch(`/api/subway/nearby-arrivals?stations=${subwayIds.join(",")}`);
           const data = await res.json();
           for (const [id, info] of Object.entries(data) as [string, { stationName: string; arrivals: ArrivalDisplay[] }][]) {
-            newMap.set(id, {
-              stationName: info.stationName,
-              arrivals: info.arrivals.slice(0, 4),
-              loading: false,
-              error: null,
-            });
+            newMap.set(id, { stationName: info.stationName, arrivals: info.arrivals.slice(0, 4), loading: false, error: null });
           }
         } catch {
           for (const id of subwayIds) {
@@ -71,7 +60,6 @@ export default function NearbyArrivals({ stations, loading }: NearbyArrivalsProp
         }
       }
 
-      // Fetch PATH individually
       for (const ps of pathStations) {
         try {
           const res = await fetch(`/api/path/realtime?station=${ps.stationId}`);
@@ -85,26 +73,21 @@ export default function NearbyArrivals({ stations, loading }: NearbyArrivalsProp
         } catch {
           newMap.set(ps.stationId, {
             stationName: "name" in ps.station ? ps.station.name : ps.stationId,
-            arrivals: [],
-            loading: false,
-            error: "Failed to load",
+            arrivals: [], loading: false, error: "Failed to load",
           });
         }
       }
-
       setStationArrivals(new Map(newMap));
     }
 
     fetchAll();
-
-    // Auto-refresh every 30s
     const interval = setInterval(fetchAll, 30_000);
     return () => clearInterval(interval);
   }, [stations]);
 
   if (loading) {
     return (
-      <Block display="flex" justifyContent="center" padding="scale1200 scale600">
+      <Block display="flex" justifyContent="center" paddingTop="scale1200" paddingBottom="scale1200">
         <Spinner $size={40} />
       </Block>
     );
@@ -120,80 +103,86 @@ export default function NearbyArrivals({ stations, loading }: NearbyArrivalsProp
     );
   }
 
-  const displayStations = stations.slice(0, 3);
-
   return (
-    <div className={css({ paddingBottom: "24px" })}>
-      {displayStations.map((nearby) => {
+    <Block paddingBottom="scale800">
+      {stations.slice(0, 3).map((nearby) => {
         const data = stationArrivals.get(nearby.stationId);
         const stationName = data?.stationName || ("name" in nearby.station ? nearby.station.name : "");
         const routes = nearby.system === "subway" && "routes" in nearby.station ? nearby.station.routes : [];
 
         return (
-          <div key={nearby.stationId} className={css({ marginBottom: "12px" })}>
+          <Block key={nearby.stationId} marginBottom="scale500">
             {/* Station header */}
-            <div
-              className={css({
-                padding: "10px 16px",
-                backgroundColor: "#FFFFFF",
-                borderBottom: "1px solid #E2E2E2",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              })}
+            <Block
+              paddingTop="scale400"
+              paddingBottom="scale400"
+              paddingLeft="scale600"
+              paddingRight="scale600"
+              backgroundColor={theme.colors.backgroundPrimary}
+              overrides={{
+                Block: {
+                  style: {
+                    borderBottom: `1px solid ${theme.colors.borderOpaque}`,
+                  },
+                },
+              }}
             >
-              <div>
-                <div className={css({ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" })}>
-                  <span className={css({ fontSize: "15px", fontWeight: 600, color: "#000000" })}>
-                    {stationName}
-                  </span>
-                  {routes.slice(0, 6).map((r) => (
-                    <RouteTag key={r} route={r} size="small" />
-                  ))}
-                  {nearby.system === "path" && (
-                    <span
-                      className={css({
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        color: "#0039A6",
-                        backgroundColor: "#E8F0FE",
-                        padding: "2px 6px",
-                        borderRadius: "4px",
-                      })}
-                    >
-                      PATH
-                    </span>
-                  )}
-                </div>
-                <div className={css({ fontSize: "12px", color: "#666666", marginTop: "2px" })}>
-                  {nearby.distanceDisplay} · {nearby.walkMinutes} min walk
-                </div>
-              </div>
-            </div>
+              <Block display="flex" alignItems="center" overrides={{ Block: { style: { gap: theme.sizing.scale200, flexWrap: "wrap" } } }}>
+                <LabelMedium color={theme.colors.contentPrimary} overrides={{ Block: { style: { fontWeight: 600 } } }}>
+                  {stationName}
+                </LabelMedium>
+                {routes.slice(0, 6).map((r) => (
+                  <RouteTag key={r} route={r} size="small" />
+                ))}
+                {nearby.system === "path" && (
+                  <LabelSmall
+                    color={theme.colors.accent}
+                    overrides={{
+                      Block: {
+                        style: {
+                          backgroundColor: theme.colors.backgroundLightAccent,
+                          paddingTop: "2px",
+                          paddingBottom: "2px",
+                          paddingLeft: theme.sizing.scale200,
+                          paddingRight: theme.sizing.scale200,
+                          borderRadius: theme.borders.radius200,
+                          fontWeight: 600,
+                        },
+                      },
+                    }}
+                  >
+                    PATH
+                  </LabelSmall>
+                )}
+              </Block>
+              <ParagraphSmall color={theme.colors.contentTertiary} marginTop="scale0">
+                {nearby.distanceDisplay} · {nearby.walkMinutes} min walk
+              </ParagraphSmall>
+            </Block>
 
             {/* Arrivals */}
             {data?.loading ? (
-              <div className={css({ display: "flex", justifyContent: "center", padding: "16px", backgroundColor: "#FFFFFF" })}>
+              <Block display="flex" justifyContent="center" paddingTop="scale600" paddingBottom="scale600" backgroundColor={theme.colors.backgroundPrimary}>
                 <Spinner $size={24} />
-              </div>
+              </Block>
             ) : data?.error ? (
-              <div className={css({ padding: "8px 16px", fontSize: "13px", color: "#E11900", backgroundColor: "#FFFFFF" })}>
-                {data.error}
-              </div>
+              <Block paddingTop="scale300" paddingBottom="scale300" paddingLeft="scale600" backgroundColor={theme.colors.backgroundPrimary}>
+                <ParagraphSmall color={theme.colors.contentNegative}>{data.error}</ParagraphSmall>
+              </Block>
             ) : data?.arrivals && data.arrivals.length > 0 ? (
-              <div className={css({ display: "flex", flexDirection: "column", gap: "1px", backgroundColor: "#E2E2E2" })}>
+              <Block display="flex" flexDirection="column" overrides={{ Block: { style: { gap: "1px", backgroundColor: theme.colors.borderOpaque } } }}>
                 {data.arrivals.map((a) => (
                   <ArrivalCard key={a.id} arrival={a} />
                 ))}
-              </div>
+              </Block>
             ) : (
-              <div className={css({ padding: "12px 16px", fontSize: "13px", color: "#666666", backgroundColor: "#FFFFFF" })}>
-                No upcoming trains
-              </div>
+              <Block paddingTop="scale500" paddingBottom="scale500" paddingLeft="scale600" backgroundColor={theme.colors.backgroundPrimary}>
+                <ParagraphSmall color={theme.colors.contentTertiary}>No upcoming trains</ParagraphSmall>
+              </Block>
             )}
-          </div>
+          </Block>
         );
       })}
-    </div>
+    </Block>
   );
 }

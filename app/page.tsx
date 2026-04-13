@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useStyletron } from "baseui";
 import { Block } from "baseui/block";
+import { HeadingXSmall, ParagraphSmall } from "baseui/typography";
 import { Tabs, Tab, FILL } from "baseui/tabs-motion";
 import StationSearch from "@/components/StationSearch";
 import SubwayRouteFilter from "@/components/SubwayRouteFilter";
@@ -19,11 +20,13 @@ import { findNearbyStations } from "@/lib/geo";
 import { PATH_STATIONS } from "@/lib/constants";
 import type { GeoCoordinates, NearbyStation, SubwayStation } from "@/lib/types";
 
-const tabStyle = ({ $isActive }: { $isActive: boolean }) => ({
-  fontWeight: $isActive ? 600 : 400,
-  color: $isActive ? "#000000" : "#666666",
-  fontSize: "14px",
-});
+function makeTabStyle(theme: any) {
+  return ({ $isActive }: { $isActive: boolean }) => ({
+    fontWeight: $isActive ? 600 : 400,
+    color: $isActive ? theme.colors.contentPrimary : theme.colors.contentSecondary,
+    ...theme.typography.font250,
+  });
+}
 
 let cachedSubwayStations: SubwayStation[] | null = null;
 
@@ -36,7 +39,7 @@ async function loadSubwayStations(): Promise<SubwayStation[]> {
 }
 
 export default function Home() {
-  const [css] = useStyletron();
+  const [css, theme] = useStyletron();
   const [activeTab, setActiveTab] = useState<string>("0");
 
   // Geolocation (shared across tabs)
@@ -95,11 +98,11 @@ export default function Home() {
       maxWidth="600px"
       marginLeft="auto"
       marginRight="auto"
-      backgroundColor="#F6F6F6"
+      backgroundColor={theme.colors.backgroundSecondary}
     >
       {/* Header */}
       <Block
-        backgroundColor="#000000"
+        backgroundColor={theme.colors.contentPrimary}
         paddingTop="scale600"
         paddingBottom="scale500"
         paddingLeft={["scale600", "scale800"]}
@@ -108,12 +111,12 @@ export default function Home() {
         top="0px"
         overrides={{ Block: { style: { zIndex: 10 } } }}
       >
-        <Block font="font550" color="white" overrides={{ Block: { style: { fontSize: "20px", fontWeight: 700, letterSpacing: "-0.3px" } } }}>
+        <HeadingXSmall margin={0} color={theme.colors.contentOnColor} overrides={{ Block: { style: { letterSpacing: "-0.3px" } } }}>
           NYC Transit
-        </Block>
-        <Block font="font100" marginTop="scale0" overrides={{ Block: { style: { fontSize: "13px", color: "#999999" } } }}>
+        </HeadingXSmall>
+        <ParagraphSmall margin={0} marginTop="scale0" color={theme.colors.contentTertiary}>
           Real-time subway & PATH schedules
-        </Block>
+        </ParagraphSmall>
       </Block>
 
       {/* Main Tabs */}
@@ -124,17 +127,17 @@ export default function Home() {
         overrides={{
           TabList: {
             style: {
-              backgroundColor: "#FFFFFF",
+              backgroundColor: theme.colors.backgroundPrimary,
               borderBottomWidth: "1px",
               borderBottomStyle: "solid",
-              borderBottomColor: "#E2E2E2",
+              borderBottomColor: theme.colors.borderOpaque,
             },
           },
-          TabHighlight: { style: { backgroundColor: "#000000" } },
+          TabHighlight: { style: { backgroundColor: theme.colors.contentPrimary } },
         }}
       >
         {/* Tab 0: Near Me */}
-        <Tab title="Near Me" overrides={{ Tab: { style: tabStyle } }}>
+        <Tab title="Near Me" overrides={{ Tab: { style: makeTabStyle(theme) } }}>
           <Block paddingTop="scale500">
             <LocationInput
               onLocationSet={handleNearMeLocation}
@@ -155,7 +158,7 @@ export default function Home() {
         </Tab>
 
         {/* Tab 1: Trip */}
-        <Tab title="Trip" overrides={{ Tab: { style: tabStyle } }}>
+        <Tab title="Trip" overrides={{ Tab: { style: makeTabStyle(theme) } }}>
           <Block paddingTop="scale500">
             <LocationInput
               onLocationSet={handleTripOriginSet}
@@ -182,7 +185,7 @@ export default function Home() {
         </Tab>
 
         {/* Tab 2: Stations (existing functionality) */}
-        <Tab title="Stations" overrides={{ Tab: { style: tabStyle } }}>
+        <Tab title="Stations" overrides={{ Tab: { style: makeTabStyle(theme) } }}>
           <Tabs
             activeKey={stationsSubTab}
             onChange={({ activeKey }) => setStationsSubTab(String(activeKey))}
@@ -196,10 +199,10 @@ export default function Home() {
                   borderBottomColor: "#E2E2E2",
                 },
               },
-              TabHighlight: { style: { backgroundColor: "#000000" } },
+              TabHighlight: { style: { backgroundColor: theme.colors.contentPrimary } },
             }}
           >
-            <Tab title="NYC Subway" overrides={{ Tab: { style: tabStyle } }}>
+            <Tab title="NYC Subway" overrides={{ Tab: { style: makeTabStyle(theme) } }}>
               <SubwayRouteFilter
                 selectedRoute={routeFilter}
                 onRouteSelect={setRouteFilter}
@@ -224,7 +227,7 @@ export default function Home() {
               </Block>
             </Tab>
 
-            <Tab title="PATH" overrides={{ Tab: { style: tabStyle } }}>
+            <Tab title="PATH" overrides={{ Tab: { style: makeTabStyle(theme) } }}>
               <Block paddingTop="scale500">
                 <StationSearch
                   system="path"

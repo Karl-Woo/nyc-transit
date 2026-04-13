@@ -1,7 +1,9 @@
 "use client";
 
 import { useStyletron } from "baseui";
-import { ALL_SUBWAY_ROUTES, ROUTE_COLORS } from "@/lib/constants";
+import { Block } from "baseui/block";
+import { Button, KIND, SIZE, SHAPE } from "baseui/button";
+import { ROUTE_COLORS } from "@/lib/constants";
 
 interface SubwayRouteFilterProps {
   selectedRoute: string | null;
@@ -21,95 +23,103 @@ const ROUTE_GROUPS = [
   ["S"],
 ];
 
-export default function SubwayRouteFilter({
-  selectedRoute,
-  onRouteSelect,
-}: SubwayRouteFilterProps) {
-  const [css] = useStyletron();
+export default function SubwayRouteFilter({ selectedRoute, onRouteSelect }: SubwayRouteFilterProps) {
+  const [css, theme] = useStyletron();
 
   return (
-    <div
-      className={css({
-        padding: "12px 16px",
-        overflowX: "auto",
-        WebkitOverflowScrolling: "touch",
-        scrollbarWidth: "none",
-        "::-webkit-scrollbar": { display: "none" },
-      })}
+    <Block
+      paddingTop="scale500"
+      paddingBottom="scale500"
+      paddingLeft="scale600"
+      paddingRight="scale600"
+      overrides={{
+        Block: {
+          style: {
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            "::-webkit-scrollbar": { display: "none" },
+          },
+        },
+      }}
     >
-      <div
-        className={css({
-          display: "flex",
-          gap: "6px",
-          alignItems: "center",
-        })}
-      >
+      <Block display="flex" alignItems="center" overrides={{ Block: { style: { gap: theme.sizing.scale200 } } }}>
         {/* All button */}
-        <button
+        <Button
+          kind={KIND.secondary}
+          size={SIZE.compact}
           onClick={() => onRouteSelect(null)}
-          className={css({
-            border: "none",
-            borderRadius: "14px",
-            padding: "6px 14px",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-            backgroundColor: !selectedRoute ? "#000000" : "#E2E2E2",
-            color: !selectedRoute ? "#FFFFFF" : "#545454",
-            transition: "all 0.15s ease",
-            ":hover": {
-              opacity: 0.85,
+          overrides={{
+            BaseButton: {
+              style: {
+                flexShrink: 0,
+                borderRadius: theme.borders.radius400,
+                backgroundColor: !selectedRoute ? theme.colors.contentPrimary : theme.colors.backgroundTertiary,
+                color: !selectedRoute ? theme.colors.contentOnColor : theme.colors.contentSecondary,
+                paddingLeft: theme.sizing.scale550,
+                paddingRight: theme.sizing.scale550,
+                ":hover": {
+                  backgroundColor: !selectedRoute ? theme.colors.contentPrimary : theme.colors.backgroundTertiary,
+                  opacity: 0.85,
+                },
+              },
             },
-          })}
+          }}
         >
           All
-        </button>
+        </Button>
 
         {ROUTE_GROUPS.map((group, gi) => (
-          <div key={gi} className={css({ display: "flex", gap: "3px" })}>
+          <Block key={gi} display="flex" overrides={{ Block: { style: { gap: theme.sizing.scale100 } } }}>
             {group.map((route) => {
               const colors = ROUTE_COLORS[route];
               const isSelected = selectedRoute === route;
               return (
-                <button
+                <Button
                   key={route}
-                  onClick={() =>
-                    onRouteSelect(isSelected ? null : route)
-                  }
-                  className={css({
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    border: isSelected
-                      ? "2px solid #000000"
-                      : "2px solid transparent",
-                    backgroundColor: colors.bg,
-                    color: colors.text,
-                    fontSize: "14px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0,
-                    transition: "all 0.15s ease",
-                    outline: "none",
-                    boxShadow: isSelected
-                      ? "0 0 0 2px #FFFFFF, 0 0 0 4px #000000"
-                      : "none",
-                    ":hover": {
-                      transform: "scale(1.1)",
+                  kind={KIND.secondary}
+                  size={SIZE.mini}
+                  shape={SHAPE.circle}
+                  onClick={() => onRouteSelect(isSelected ? null : route)}
+                  overrides={{
+                    BaseButton: {
+                      style: {
+                        width: "32px",
+                        height: "32px",
+                        backgroundColor: colors.bg,
+                        color: colors.text,
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        borderTopWidth: isSelected ? "2px" : "2px",
+                        borderBottomWidth: isSelected ? "2px" : "2px",
+                        borderLeftWidth: isSelected ? "2px" : "2px",
+                        borderRightWidth: isSelected ? "2px" : "2px",
+                        borderTopStyle: "solid",
+                        borderBottomStyle: "solid",
+                        borderLeftStyle: "solid",
+                        borderRightStyle: "solid",
+                        borderTopColor: isSelected ? theme.colors.contentPrimary : "transparent",
+                        borderBottomColor: isSelected ? theme.colors.contentPrimary : "transparent",
+                        borderLeftColor: isSelected ? theme.colors.contentPrimary : "transparent",
+                        borderRightColor: isSelected ? theme.colors.contentPrimary : "transparent",
+                        boxShadow: isSelected
+                          ? `0 0 0 2px ${theme.colors.backgroundPrimary}, 0 0 0 4px ${theme.colors.contentPrimary}`
+                          : "none",
+                        ":hover": {
+                          backgroundColor: colors.bg,
+                          transform: "scale(1.1)",
+                        },
+                      },
                     },
-                  })}
+                  }}
                 >
                   {route}
-                </button>
+                </Button>
               );
             })}
-          </div>
+          </Block>
         ))}
-      </div>
-    </div>
+      </Block>
+    </Block>
   );
 }

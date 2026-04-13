@@ -6,6 +6,7 @@ import { Block } from "baseui/block";
 import { Button, KIND, SIZE } from "baseui/button";
 import { Select, TYPE } from "baseui/select";
 import { Spinner } from "baseui/spinner";
+import { LabelSmall, ParagraphSmall } from "baseui/typography";
 import type { GeoCoordinates } from "@/lib/types";
 
 interface LocationInputProps {
@@ -19,21 +20,14 @@ interface LocationInputProps {
 }
 
 export default function LocationInput({
-  onLocationSet,
-  geoLocation,
-  geoLoading,
-  geoError,
-  onRequestGeo,
-  label = "Your location",
-  value,
+  onLocationSet, geoLocation, geoLoading, geoError, onRequestGeo, label = "Your location", value,
 }: LocationInputProps) {
-  const [css] = useStyletron();
+  const [css, theme] = useStyletron();
   const [addressOptions, setAddressOptions] = useState<Array<{ id: string; label: string; lat: number; lon: number }>>([]);
   const [selectedValue, setSelectedValue] = useState<Array<{ id: string; label: string }>>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [waitingForGps, setWaitingForGps] = useState(false);
 
-  // When GPS resolves after button click, propagate to parent
   useEffect(() => {
     if (waitingForGps && geoLocation && !geoLoading) {
       onLocationSet(geoLocation, "Current Location", "gps");
@@ -43,64 +37,36 @@ export default function LocationInput({
   }, [waitingForGps, geoLocation, geoLoading, onLocationSet]);
 
   const handleInputChange = useCallback(async (inputValue: string) => {
-    if (inputValue.length < 3) {
-      setAddressOptions([]);
-      return;
-    }
-
+    if (inputValue.length < 3) { setAddressOptions([]); return; }
     setSearchLoading(true);
     try {
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(inputValue)}`);
       const data = await res.json();
       setAddressOptions(
         (data.results || []).map((r: { displayName: string; lat: number; lon: number }, i: number) => ({
-          id: `addr-${i}`,
-          label: r.displayName.split(",").slice(0, 3).join(","),
-          lat: r.lat,
-          lon: r.lon,
+          id: `addr-${i}`, label: r.displayName.split(",").slice(0, 3).join(","), lat: r.lat, lon: r.lon,
         }))
       );
-    } catch {
-      setAddressOptions([]);
-    } finally {
-      setSearchLoading(false);
-    }
+    } catch { setAddressOptions([]); } finally { setSearchLoading(false); }
   }, []);
 
   const handleGpsClick = useCallback(() => {
-    if (geoLocation) {
-      // Already have location, use immediately
-      onLocationSet(geoLocation, "Current Location", "gps");
-      setSelectedValue([]);
-    } else {
-      // Request location and wait for it
-      setWaitingForGps(true);
-      onRequestGeo();
-    }
+    if (geoLocation) { onLocationSet(geoLocation, "Current Location", "gps"); setSelectedValue([]); }
+    else { setWaitingForGps(true); onRequestGeo(); }
   }, [geoLocation, onLocationSet, onRequestGeo]);
 
   const isLocated = !!value && value === "Current Location";
 
   return (
     <Block paddingLeft="scale600" paddingRight="scale600">
-      <Block
-        font="font100"
-        color="contentSecondary"
+      <LabelSmall
+        color={theme.colors.contentSecondary}
         marginBottom="scale200"
-        overrides={{
-          Block: {
-            style: {
-              fontSize: "12px",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-            },
-          },
-        }}
+        overrides={{ Block: { style: { textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 700 } } }}
       >
         {label}
-      </Block>
-      <Block display="flex" gridGap="scale300" alignItems="flex-start">
+      </LabelSmall>
+      <Block display="flex" alignItems="flex-start" overrides={{ Block: { style: { gap: theme.sizing.scale300 } } }}>
         <Button
           kind={KIND.secondary}
           size={SIZE.compact}
@@ -112,14 +78,12 @@ export default function LocationInput({
                 flexShrink: 0,
                 minWidth: "48px",
                 height: "48px",
-                borderTopLeftRadius: "12px",
-                borderTopRightRadius: "12px",
-                borderBottomLeftRadius: "12px",
-                borderBottomRightRadius: "12px",
-                backgroundColor: isLocated ? "#000000" : "#E2E2E2",
-                color: isLocated ? "#FFFFFF" : "#000000",
+                borderRadius: theme.borders.radius400,
+                backgroundColor: isLocated ? theme.colors.contentPrimary : theme.colors.backgroundTertiary,
+                color: isLocated ? theme.colors.contentOnColor : theme.colors.contentPrimary,
                 ":hover": {
-                  backgroundColor: isLocated ? "#333333" : "#CCCCCC",
+                  backgroundColor: isLocated ? theme.colors.contentPrimary : theme.colors.backgroundTertiary,
+                  opacity: 0.85,
                 },
               },
             },
@@ -138,46 +102,27 @@ export default function LocationInput({
         <Block flex="1">
           <Select
             options={addressOptions}
-            value={
-              value
-                ? [{ id: "current", label: value }]
-                : selectedValue
-            }
+            value={value ? [{ id: "current", label: value }] : selectedValue}
             placeholder="Enter an address..."
             type={TYPE.search}
             isLoading={searchLoading}
             filterOptions={(options) => options}
-            onInputChange={(e) => {
-              const target = e.target as HTMLInputElement;
-              handleInputChange(target.value);
-            }}
+            onInputChange={(e) => { const target = e.target as HTMLInputElement; handleInputChange(target.value); }}
             onChange={(params) => {
               const sel = params.value as Array<{ id: string; label: string; lat?: number; lon?: number }>;
               setSelectedValue(sel);
               if (sel.length > 0 && sel[0].lat && sel[0].lon) {
-                onLocationSet(
-                  { lat: sel[0].lat, lon: sel[0].lon },
-                  sel[0].label,
-                  "address"
-                );
+                onLocationSet({ lat: sel[0].lat, lon: sel[0].lon }, sel[0].label, "address");
               }
             }}
             overrides={{
               ControlContainer: {
                 style: {
-                  backgroundColor: "#FFFFFF",
-                  borderTopWidth: "2px",
-                  borderBottomWidth: "2px",
-                  borderLeftWidth: "2px",
-                  borderRightWidth: "2px",
-                  borderTopColor: "#E2E2E2",
-                  borderBottomColor: "#E2E2E2",
-                  borderLeftColor: "#E2E2E2",
-                  borderRightColor: "#E2E2E2",
-                  borderTopLeftRadius: "12px",
-                  borderTopRightRadius: "12px",
-                  borderBottomLeftRadius: "12px",
-                  borderBottomRightRadius: "12px",
+                  backgroundColor: theme.colors.backgroundPrimary,
+                  borderTopWidth: "2px", borderBottomWidth: "2px", borderLeftWidth: "2px", borderRightWidth: "2px",
+                  borderTopColor: theme.colors.borderOpaque, borderBottomColor: theme.colors.borderOpaque,
+                  borderLeftColor: theme.colors.borderOpaque, borderRightColor: theme.colors.borderOpaque,
+                  borderRadius: theme.borders.radius400,
                   minHeight: "48px",
                 },
               },
@@ -186,9 +131,9 @@ export default function LocationInput({
         </Block>
       </Block>
       {geoError && (
-        <Block font="font100" color="contentNegative" marginTop="scale100">
-          <span className={css({ fontSize: "12px" })}>{geoError}. Enter an address instead.</span>
-        </Block>
+        <ParagraphSmall color={theme.colors.contentNegative} marginTop="scale200">
+          {geoError}. Enter an address instead.
+        </ParagraphSmall>
       )}
     </Block>
   );

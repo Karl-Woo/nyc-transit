@@ -10,24 +10,18 @@ interface RouteTagProps {
   size?: "small" | "default" | "large";
 }
 
-export default function RouteTag({
-  route,
-  color,
-  textColor,
-  size = "default",
-}: RouteTagProps) {
-  const [css] = useStyletron();
-  const colors = ROUTE_COLORS[route] || { bg: color || "#808080", text: textColor || "#FFFFFF" };
+const SIZES = {
+  small: { wh: "22px", fs: "12px" },
+  default: { wh: "28px", fs: "14px" },
+  large: { wh: "36px", fs: "18px" },
+};
+
+export default function RouteTag({ route, color, textColor, size = "default" }: RouteTagProps) {
+  const [css, theme] = useStyletron();
+  const colors = ROUTE_COLORS[route] || { bg: color || theme.colors.contentTertiary, text: textColor || theme.colors.contentOnColor };
   const bg = color || colors.bg;
   const fg = textColor || colors.text;
-
-  const sizeMap = {
-    small: { width: "22px", height: "22px", fontSize: "12px" },
-    default: { width: "28px", height: "28px", fontSize: "14px" },
-    large: { width: "36px", height: "36px", fontSize: "18px" },
-  };
-
-  const s = sizeMap[size];
+  const s = SIZES[size];
 
   return (
     <span
@@ -35,12 +29,13 @@ export default function RouteTag({
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        width: s.width,
-        height: s.height,
+        width: s.wh,
+        height: s.wh,
         borderRadius: "50%",
         backgroundColor: bg,
         color: fg,
-        fontSize: s.fontSize,
+        ...theme.typography.font150,
+        fontSize: s.fs,
         fontWeight: 700,
         lineHeight: 1,
         flexShrink: 0,

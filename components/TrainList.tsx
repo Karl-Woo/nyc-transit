@@ -1,6 +1,8 @@
 "use client";
 
 import { useStyletron } from "baseui";
+import { Block } from "baseui/block";
+import { LabelSmall, ParagraphSmall } from "baseui/typography";
 import { Spinner } from "baseui/spinner";
 import { Notification, KIND as NOTIFICATION_KIND } from "baseui/notification";
 import ArrivalCard from "./ArrivalCard";
@@ -23,41 +25,35 @@ export default function TrainList({
   system,
   lastUpdated,
 }: TrainListProps) {
-  const [css] = useStyletron();
+  const [css, theme] = useStyletron();
 
   if (loading && arrivals.length === 0) {
     return (
-      <div
-        className={css({
-          display: "flex",
-          justifyContent: "center",
-          padding: "48px 16px",
-        })}
-      >
+      <Block display="flex" justifyContent="center" paddingTop="scale1200" paddingBottom="scale1200">
         <Spinner $size={40} />
-      </div>
+      </Block>
     );
   }
 
   if (error) {
     return (
-      <div className={css({ padding: "16px" })}>
+      <Block padding="scale600">
         <Notification kind={NOTIFICATION_KIND.negative} closeable={false}>
           {error}
         </Notification>
-      </div>
+      </Block>
     );
   }
 
   if (arrivals.length === 0) {
     return (
-      <div className={css({ padding: "16px" })}>
+      <Block padding="scale600">
         <Notification kind={NOTIFICATION_KIND.info} closeable={false}>
           {stationName
             ? `No upcoming trains at ${stationName}`
             : "Select a station to view arrivals"}
         </Notification>
-      </div>
+      </Block>
     );
   }
 
@@ -68,61 +64,65 @@ export default function TrainList({
     groups[a.direction].push(a);
   }
 
-  // Sort direction keys
   const directionOrder =
-    system === "subway"
-      ? ["Uptown", "Downtown"]
-      : ["To NY", "To NJ"];
-
+    system === "subway" ? ["Uptown", "Downtown"] : ["To NY", "To NJ"];
   const sortedDirs = Object.keys(groups).sort(
     (a, b) => directionOrder.indexOf(a) - directionOrder.indexOf(b)
   );
 
   return (
-    <div className={css({ paddingBottom: "24px" })}>
+    <Block paddingBottom="scale800">
       {lastUpdated && (
-        <div
-          className={css({
-            padding: "8px 16px",
-            fontSize: "12px",
-            color: "#666666",
-            textAlign: "right",
-          })}
-        >
-          Updated {formatTimeAgo(lastUpdated)}
-        </div>
+        <Block paddingTop="scale300" paddingBottom="scale300" paddingRight="scale600">
+          <ParagraphSmall color={theme.colors.contentTertiary} overrides={{ Block: { style: { textAlign: "right" } } }}>
+            Updated {formatTimeAgo(lastUpdated)}
+          </ParagraphSmall>
+        </Block>
       )}
 
       {sortedDirs.map((dir) => (
-        <div key={dir} className={css({ marginBottom: "8px" })}>
-          <div
-            className={css({
-              padding: "8px 16px",
-              fontSize: "13px",
-              fontWeight: 700,
-              color: "#545454",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              backgroundColor: "#EEEEEE",
-            })}
+        <Block key={dir} marginBottom="scale300">
+          <Block
+            paddingTop="scale300"
+            paddingBottom="scale300"
+            paddingLeft="scale600"
+            paddingRight="scale600"
+            backgroundColor={theme.colors.backgroundSecondary}
           >
-            {dir}
-          </div>
-          <div
-            className={css({
-              display: "flex",
-              flexDirection: "column",
-              gap: "1px",
-              backgroundColor: "#E2E2E2",
-            })}
+            <LabelSmall
+              color={theme.colors.contentSecondary}
+              overrides={{
+                Block: {
+                  style: {
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    fontWeight: 700,
+                  },
+                },
+              }}
+            >
+              {dir}
+            </LabelSmall>
+          </Block>
+          <Block
+            display="flex"
+            flexDirection="column"
+            overrides={{
+              Block: {
+                style: {
+                  gap: "1px",
+                  backgroundColor: theme.colors.borderOpaque,
+                },
+              },
+            }}
           >
             {groups[dir].slice(0, 8).map((arrival) => (
               <ArrivalCard key={arrival.id} arrival={arrival} />
             ))}
-          </div>
-        </div>
+          </Block>
+        </Block>
       ))}
-    </div>
+    </Block>
   );
 }
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Select, TYPE } from "baseui/select";
+import { useStyletron } from "baseui";
 import { Block } from "baseui/block";
+import { Select, TYPE } from "baseui/select";
+import { LabelMedium } from "baseui/typography";
 import type { SubwayStation } from "@/lib/types";
 import { PATH_STATIONS } from "@/lib/constants";
 import RouteTag from "./RouteTag";
-import { useStyletron } from "baseui";
 
 interface StationSearchProps {
   system: "subway" | "path";
@@ -14,12 +15,8 @@ interface StationSearchProps {
   onStationSelect: (stationId: string, stationName: string) => void;
 }
 
-export default function StationSearch({
-  system,
-  routeFilter,
-  onStationSelect,
-}: StationSearchProps) {
-  const [css] = useStyletron();
+export default function StationSearch({ system, routeFilter, onStationSelect }: StationSearchProps) {
+  const [css, theme] = useStyletron();
   const [stations, setStations] = useState<SubwayStation[]>([]);
   const [value, setValue] = useState<Array<{ id: string; label: string; routes?: string[] }>>([]);
   const [loading, setLoading] = useState(false);
@@ -35,29 +32,15 @@ export default function StationSearch({
     }
   }, [system]);
 
-  // Reset selection when route filter changes
-  useEffect(() => {
-    setValue([]);
-  }, [routeFilter]);
+  useEffect(() => { setValue([]); }, [routeFilter]);
 
   const options = useMemo(() => {
     if (system === "path") {
-      return PATH_STATIONS.map((s) => ({
-        id: s.station,
-        label: s.name,
-      }));
+      return PATH_STATIONS.map((s) => ({ id: s.station, label: s.name }));
     }
-
     let filtered = stations;
-    if (routeFilter) {
-      filtered = stations.filter((s) => s.routes.includes(routeFilter));
-    }
-
-    return filtered.map((s) => ({
-      id: s.stopId,
-      label: s.name,
-      routes: s.routes,
-    }));
+    if (routeFilter) { filtered = stations.filter((s) => s.routes.includes(routeFilter)); }
+    return filtered.map((s) => ({ id: s.stopId, label: s.name, routes: s.routes }));
   }, [system, stations, routeFilter]);
 
   return (
@@ -65,31 +48,25 @@ export default function StationSearch({
       <Select
         options={options}
         value={value}
-        placeholder={
-          system === "subway"
-            ? "Search subway stations..."
-            : "Search PATH stations..."
-        }
+        placeholder={system === "subway" ? "Search subway stations..." : "Search PATH stations..."}
         type={TYPE.search}
         onChange={(params) => {
           const selected = params.value as Array<{ id: string; label: string }>;
           setValue(selected);
-          if (selected.length > 0) {
-            onStationSelect(selected[0].id as string, selected[0].label);
-          }
+          if (selected.length > 0) { onStationSelect(selected[0].id as string, selected[0].label); }
         }}
         isLoading={loading}
         getOptionLabel={({ option }) => {
           if (system === "subway" && option?.routes) {
             return (
-              <div className={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-                <span>{String(option.label)}</span>
-                <div className={css({ display: "flex", gap: "3px", flexWrap: "wrap" })}>
+              <Block display="flex" alignItems="center" overrides={{ Block: { style: { gap: theme.sizing.scale300 } } }}>
+                <LabelMedium>{String(option.label)}</LabelMedium>
+                <Block display="flex" overrides={{ Block: { style: { gap: theme.sizing.scale100, flexWrap: "wrap" } } }}>
                   {(option.routes as string[]).map((r: string) => (
                     <RouteTag key={r} route={r} size="small" />
                   ))}
-                </div>
-              </div>
+                </Block>
+              </Block>
             ) as unknown as React.ReactNode;
           }
           return String(option?.label || "") as unknown as React.ReactNode;
@@ -97,19 +74,11 @@ export default function StationSearch({
         overrides={{
           ControlContainer: {
             style: {
-              backgroundColor: "#FFFFFF",
-              borderTopWidth: "2px",
-              borderBottomWidth: "2px",
-              borderLeftWidth: "2px",
-              borderRightWidth: "2px",
-              borderTopColor: "#E2E2E2",
-              borderBottomColor: "#E2E2E2",
-              borderLeftColor: "#E2E2E2",
-              borderRightColor: "#E2E2E2",
-              borderTopLeftRadius: "12px",
-              borderTopRightRadius: "12px",
-              borderBottomLeftRadius: "12px",
-              borderBottomRightRadius: "12px",
+              backgroundColor: theme.colors.backgroundPrimary,
+              borderTopWidth: "2px", borderBottomWidth: "2px", borderLeftWidth: "2px", borderRightWidth: "2px",
+              borderTopColor: theme.colors.borderOpaque, borderBottomColor: theme.colors.borderOpaque,
+              borderLeftColor: theme.colors.borderOpaque, borderRightColor: theme.colors.borderOpaque,
+              borderRadius: theme.borders.radius400,
             },
           },
         }}

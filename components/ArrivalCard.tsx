@@ -1,6 +1,8 @@
 "use client";
 
 import { useStyletron } from "baseui";
+import { Block } from "baseui/block";
+import { LabelMedium, LabelSmall } from "baseui/typography";
 import RouteTag from "./RouteTag";
 import type { ArrivalDisplay } from "@/lib/types";
 
@@ -9,7 +11,7 @@ interface ArrivalCardProps {
 }
 
 export default function ArrivalCard({ arrival }: ArrivalCardProps) {
-  const [css] = useStyletron();
+  const [css, theme] = useStyletron();
 
   const minutesDisplay =
     arrival.minutesAway <= 0
@@ -19,15 +21,22 @@ export default function ArrivalCard({ arrival }: ArrivalCardProps) {
         : `${arrival.minutesAway} min`;
 
   return (
-    <div
-      className={css({
-        display: "flex",
-        alignItems: "center",
-        padding: "12px 16px",
-        backgroundColor: "#FFFFFF",
-        borderLeft: `4px solid ${arrival.routeColor}`,
-        gap: "12px",
-      })}
+    <Block
+      display="flex"
+      alignItems="center"
+      paddingTop="scale500"
+      paddingBottom="scale500"
+      paddingLeft="scale600"
+      paddingRight="scale600"
+      backgroundColor={theme.colors.backgroundPrimary}
+      overrides={{
+        Block: {
+          style: {
+            borderLeft: `4px solid ${arrival.routeColor}`,
+            gap: theme.sizing.scale500,
+          },
+        },
+      }}
     >
       <RouteTag
         route={arrival.route}
@@ -35,44 +44,40 @@ export default function ArrivalCard({ arrival }: ArrivalCardProps) {
         textColor={arrival.routeTextColor}
       />
 
-      <div className={css({ flex: 1, minWidth: 0 })}>
-        <div
-          className={css({
-            fontSize: "15px",
-            fontWeight: 600,
-            color: "#000000",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          })}
+      <Block flex="1" minWidth="0">
+        <LabelMedium
+          color={theme.colors.contentPrimary}
+          overrides={{
+            Block: {
+              style: {
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              },
+            },
+          }}
         >
           {arrival.destination}
-        </div>
+        </LabelMedium>
         {arrival.status !== "On Time" && (
-          <div
-            className={css({
-              fontSize: "12px",
-              color: "#E11900",
-              marginTop: "2px",
-            })}
-          >
+          <LabelSmall color={theme.colors.contentNegative} marginTop="scale0">
             {arrival.status}
-          </div>
+          </LabelSmall>
         )}
-      </div>
+      </Block>
 
-      <div
+      <Block
         className={css({
-          fontSize: arrival.minutesAway <= 1 ? "16px" : "18px",
+          fontSize: arrival.minutesAway <= 1 ? theme.typography.HeadingXSmall.fontSize : theme.typography.HeadingXSmall.fontSize,
           fontWeight: 700,
-          color: arrival.minutesAway <= 1 ? "#E11900" : "#000000",
+          color: arrival.minutesAway <= 1 ? theme.colors.contentNegative : theme.colors.contentPrimary,
           whiteSpace: "nowrap",
           minWidth: "50px",
           textAlign: "right",
         })}
       >
         {minutesDisplay}
-      </div>
-    </div>
+      </Block>
+    </Block>
   );
 }

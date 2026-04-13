@@ -2,6 +2,7 @@
 
 import { useStyletron } from "baseui";
 import { Block } from "baseui/block";
+import { LabelSmall } from "baseui/typography";
 import { Spinner } from "baseui/spinner";
 import { Notification, KIND as NOTIFICATION_KIND } from "baseui/notification";
 import RouteOptionCard from "./RouteOptionCard";
@@ -15,22 +16,14 @@ interface TripResultsProps {
   hasDestination: boolean;
 }
 
-export default function TripResults({
-  routes,
-  loading,
-  error,
-  hasOrigin,
-  hasDestination,
-}: TripResultsProps) {
-  const [css] = useStyletron();
+export default function TripResults({ routes, loading, error, hasOrigin, hasDestination }: TripResultsProps) {
+  const [css, theme] = useStyletron();
 
   if (!hasOrigin || !hasDestination) {
     return (
       <Block padding="scale600">
         <Notification kind={NOTIFICATION_KIND.info} closeable={false}>
-          {!hasOrigin
-            ? "Set your starting location to plan a trip"
-            : "Enter a destination to find routes"}
+          {!hasOrigin ? "Set your starting location to plan a trip" : "Enter a destination to find routes"}
         </Notification>
       </Block>
     );
@@ -38,7 +31,7 @@ export default function TripResults({
 
   if (loading) {
     return (
-      <Block display="flex" justifyContent="center" padding="scale1200 scale600">
+      <Block display="flex" justifyContent="center" paddingTop="scale1200" paddingBottom="scale1200">
         <Spinner $size={40} />
       </Block>
     );
@@ -47,9 +40,7 @@ export default function TripResults({
   if (error) {
     return (
       <Block padding="scale600">
-        <Notification kind={NOTIFICATION_KIND.negative} closeable={false}>
-          {error}
-        </Notification>
+        <Notification kind={NOTIFICATION_KIND.negative} closeable={false}>{error}</Notification>
       </Block>
     );
   }
@@ -66,23 +57,21 @@ export default function TripResults({
 
   return (
     <Block paddingTop="scale500" paddingLeft="scale600" paddingRight="scale600" paddingBottom="scale600">
-      <Block
-        font="font100"
-        color="contentSecondary"
+      <LabelSmall
+        color={theme.colors.contentSecondary}
         marginBottom="scale300"
         overrides={{
           Block: {
             style: {
-              fontSize: "13px",
-              fontWeight: 600,
               textTransform: "uppercase",
               letterSpacing: "0.5px",
+              fontWeight: 700,
             },
           },
         }}
       >
         {routes.length} route{routes.length !== 1 ? "s" : ""} found
-      </Block>
+      </LabelSmall>
       {routes.map((route, i) => (
         <RouteOptionCard key={route.id} option={route} isFastest={i === 0} />
       ))}
